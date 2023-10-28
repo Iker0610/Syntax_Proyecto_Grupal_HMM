@@ -62,6 +62,13 @@ class HiddenMarkovModel:
         # Calculate the initial probabilities: π_q ∗ b_q(o_1); as we are using log probabilities the multiplication becomes a sum
         viterbi_matrix[:, 0] = self.initial_probability_distribution + self.emission_likelihoods[:, self.observations == sentence[0]].squeeze()
 
+        # Calculate the probabilities for the remaining tokens
+        for t, token in enumerate(sentence[1:], start=1):
+            for q, state in enumerate(self.states):
+                # viterbi[q, t] = max viterbi[q′, t − 1] ∗ A[q′,q] ∗ b_q (o_t)
+                viterbi_matrix[q, t] = np.max(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q]) + self.emission_likelihoods[q, self.observations == token].squeeze()
+                # backpointers[q, t] = argmax viterbi[q′, t − 1] ∗ A[q′,q]
+                backpointers[q, t] = np.argmax(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q])
 
 
 if __name__ == '__main__':
