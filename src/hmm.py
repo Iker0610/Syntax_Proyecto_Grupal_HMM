@@ -52,14 +52,27 @@ class HiddenMarkovModel:
         self.transition_probabilities = np.log2(self.transition_probabilities) - np.log2(np.sum(self.transition_probabilities, axis=1, keepdims=True))
         self.emission_likelihoods = np.log2(self.emission_likelihoods) - np.log2(np.sum(self.emission_likelihoods, axis=1, keepdims=True))
 
-    def predict(self, sentence: list[str]) -> list[tuple[str, str]]:
+    def predict(self, sentence: list[str]) -> tuple[list[tuple[str, str]], float]:
+        """
+        Predict the POS tags for a given sentence using the Viterbi algorithm
+        :param sentence: The sentence to predict the POS tags for as a list of tokens
+        :return: list of tuples with the tokens and their predicted POS tags, and the probability of the best path
+        """
+        assert len(sentence) > 0, 'The sentence must contain at least one token'
+
+        # -----------------------------------------------------------------------------------------------------------------------
+
         # Initialize the Viterbi matrix with zeros: viterbi[N, T] ← 0
         viterbi_matrix = np.zeros((len(self.states), len(sentence)))
         # Initialize the backpointers matrix with zeros: backpointers[N, T] ← 0
         backpointers = np.zeros((len(self.states), len(sentence)), dtype=int)
 
+        # -----------------------------------------------------------------------------------------------------------------------
+
         # Calculate the initial probabilities: π_q ∗ b_q(o_1); as we are using log probabilities the multiplication becomes a sum
         viterbi_matrix[:, 0] = self.initial_probability_distribution + self.emission_likelihoods[:, self.observations == sentence[0]].squeeze()
+
+        # -----------------------------------------------------------------------------------------------------------------------
 
         # Calculate the probabilities for the remaining tokens
         for t, token in enumerate(sentence[1:], start=1):
@@ -68,6 +81,8 @@ class HiddenMarkovModel:
                 viterbi_matrix[q, t] = np.max(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q]) + self.emission_likelihoods[q, self.observations == token].squeeze()
                 # backpointers[q, t] = argmax viterbi[q′, t − 1] ∗ A[q′,q]
                 backpointers[q, t] = np.argmax(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q])
+
+        # -----------------------------------------------------------------------------------------------------------------------
 
         # Termination step: calculate best path probability and best path pointer
         best_path_probability = np.max(viterbi_matrix[:, -1])
@@ -79,7 +94,7 @@ class HiddenMarkovModel:
             best_path.append(backpointers[best_path[-1], t])
 
         # Reverse the best path and return the predicted tags
-        return [(token, self.states[tag]) for token, tag in zip(sentence, reversed(best_path))]
+        return [(token, self.states[tag]) for token, tag in zip(sentence, reversed(best_path))], best_path_probability
 
 
 if __name__ == '__main__':
