@@ -52,6 +52,17 @@ class HiddenMarkovModel:
         self.transition_probabilities = np.log2(self.transition_probabilities) - np.log2(np.sum(self.transition_probabilities, axis=1, keepdims=True))
         self.emission_likelihoods = np.log2(self.emission_likelihoods) - np.log2(np.sum(self.emission_likelihoods, axis=1, keepdims=True))
 
+    def predict(self, sentence: list[str]) -> list[tuple[str, str]]:
+        # Initialize the Viterbi matrix with zeros: viterbi[N, T] ← 0
+        viterbi_matrix = np.zeros((len(self.states), len(sentence)))
+        # Initialize the backpointers matrix with zeros: backpointers[N, T] ← 0
+        backpointers = np.zeros((len(self.states), len(sentence)), dtype=int)
+
+
+        # Calculate the initial probabilities: π_q ∗ b_q(o_1); as we are using log probabilities the multiplication becomes a sum
+        viterbi_matrix[:, 0] = self.initial_probability_distribution + self.emission_likelihoods[:, self.observations == sentence[0]].squeeze()
+
+
 
 if __name__ == '__main__':
     d = Dataset(
