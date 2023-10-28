@@ -58,7 +58,6 @@ class HiddenMarkovModel:
         # Initialize the backpointers matrix with zeros: backpointers[N, T] ← 0
         backpointers = np.zeros((len(self.states), len(sentence)), dtype=int)
 
-
         # Calculate the initial probabilities: π_q ∗ b_q(o_1); as we are using log probabilities the multiplication becomes a sum
         viterbi_matrix[:, 0] = self.initial_probability_distribution + self.emission_likelihoods[:, self.observations == sentence[0]].squeeze()
 
@@ -69,6 +68,15 @@ class HiddenMarkovModel:
                 viterbi_matrix[q, t] = np.max(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q]) + self.emission_likelihoods[q, self.observations == token].squeeze()
                 # backpointers[q, t] = argmax viterbi[q′, t − 1] ∗ A[q′,q]
                 backpointers[q, t] = np.argmax(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q])
+
+        # Termination step: calculate best path probability and best path pointer
+        best_path_probability = np.max(viterbi_matrix[:, -1])
+        best_path_pointer = np.argmax(viterbi_matrix[:, -1])
+
+        # Backtrack to find the best path
+        best_path = [best_path_pointer]
+        for t in range(len(sentence) - 1, 0, -1):
+            best_path.append(backpointers[best_path[-1], t])
 
 
 if __name__ == '__main__':
