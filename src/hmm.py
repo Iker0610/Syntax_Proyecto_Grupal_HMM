@@ -11,6 +11,9 @@ np.seterr(divide='ignore')
 
 
 class HiddenMarkovModel:
+    # TODO: Add <EOS> token to the vocabulary and the states
+    # TODO: Add <UNK> token to the vocabulary and the states and define a minimum frequency threshold
+
     states: ndarray  # States (Q)
     observations: ndarray  # Observations (O)
     transition_probabilities: ndarray  # Transition Probability Matrix (A); shape: (Q[t_{i-1}] x Q[t_{i}])
@@ -76,11 +79,15 @@ class HiddenMarkovModel:
 
         # Calculate the probabilities for the remaining tokens
         for t, token in enumerate(sentence[1:], start=1):
-            for q, state in enumerate(self.states):
-                # viterbi[q, t] = max viterbi[q′, t − 1] ∗ A[q′,q] ∗ b_q (o_t)
-                viterbi_matrix[q, t] = np.max(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q]) + self.emission_likelihoods[q, self.observations == token].squeeze()
-                # backpointers[q, t] = argmax viterbi[q′, t − 1] ∗ A[q′,q]
-                backpointers[q, t] = np.argmax(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q])
+            # for q, state in enumerate(self.states):
+            #     # viterbi[q, t] = max viterbi[q′, t − 1] ∗ A[q′,q] ∗ b_q (o_t)
+            #     viterbi_matrix[q, t] = np.max(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q]) + self.emission_likelihoods[q, self.observations == token].squeeze()
+            #     # backpointers[q, t] = argmax viterbi[q′, t − 1] ∗ A[q′,q]
+            #     backpointers[q, t] = np.argmax(viterbi_matrix[:, t - 1] + self.transition_probabilities[:, q])
+
+            conditioned_transition_probabilities = viterbi_matrix[:, [t - 1]] + self.transition_probabilities[:, :]
+            viterbi_matrix[:, t] = np.max(conditioned_transition_probabilities, axis=0) + self.emission_likelihoods[:, self.observations == token].squeeze()
+            backpointers[:, t] = np.argmax(conditioned_transition_probabilities, axis=0)
 
         # -----------------------------------------------------------------------------------------------------------------------
 
@@ -105,3 +112,5 @@ if __name__ == '__main__':
         test_path=Path('../data/UD_Basque-BDT/eu_bdt-ud-test.conllu'),
     )
     hmm = HiddenMarkovModel(d)
+    print('Pred:', hmm.predict([token for token, _ in d.train.data[0]]))
+    print('Gold:', d.train.data[0])
