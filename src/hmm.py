@@ -78,6 +78,9 @@ class HiddenMarkovModel:
         for t in range(len(sentence) - 1, 0, -1):
             best_path.append(backpointers[best_path[-1], t])
 
+        # Reverse the best path and return the predicted tags
+        return [(token, self.states[tag]) for token, tag in zip(sentence, reversed(best_path))]
+
 
 if __name__ == '__main__':
     d = Dataset(
