@@ -5,7 +5,7 @@ import numpy as np
 from numpy import ndarray
 
 from dataset_loader import Dataset, DatasetSplit
-from evaluation_metrics import accuracy
+from evaluation_metrics import accuracy, conf_matrix
 
 # Ignore division by zero warnings
 np.seterr(divide='ignore')
@@ -116,11 +116,13 @@ if __name__ == '__main__':
     gold = d.train.data[0]
     pred = hmm.predict([token for token, _ in d.train.data[0]])
 
-    y_gold = [word for word, tag in gold]
-    y_pred = [word for word, tag in pred[0]]
+    y_gold = [tag for word, tag in gold]
+    y_pred = [tag for word, tag in pred[0]]
 
     print('Pred:', pred)
     print('Gold:', gold)
 
     print('accuracy: ', accuracy(y_gold, y_pred))
+
+    print(conf_matrix(y_gold, y_pred, list(d.pos_tags)))
 
