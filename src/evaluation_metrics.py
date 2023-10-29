@@ -3,9 +3,10 @@ def accuracy(y_true, y_pred):
     return len(check) / len(y_true)
 
 
-def precision(y_true, y_pred):
-    # TODO
-    return 0.0
+def precision(y_true, y_pred, tag):
+    tp = [g_tag for g_tag, p_tag in zip(y_true, y_pred) if p_tag == p_tag and p_tag == tag]
+    tp_fp = [g_tag for g_tag, p_tag in zip(y_true, y_pred) if p_tag == tag]
+    return len(tp) / len(tp_fp)
 
 
 def recall(y_true, y_pred):
