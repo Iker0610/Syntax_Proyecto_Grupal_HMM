@@ -15,6 +15,7 @@ def recall(y_true, y_pred, tag):
     return len(tp) / len(tp_fn)
 
 
-def f1(y_true, y_pred):
-    # TODO
-    return 0.0
+def f1(y_true, y_pred, tag):
+    p = precision(y_true, y_pred, tag)
+    r = recall(y_true, y_pred, tag)
+    return 2 * p * r / (p + r)
