@@ -5,7 +5,7 @@ import numpy as np
 from numpy import ndarray
 
 from dataset_loader import Dataset, DatasetSplit
-from evaluation_metrics import accuracy, conf_matrix
+from evaluation_metrics import accuracy, conf_matrix, f1, precision, recall
 
 # Ignore division by zero warnings
 np.seterr(divide='ignore')
@@ -123,6 +123,9 @@ if __name__ == '__main__':
     print('Gold:', gold)
 
     print('accuracy: ', accuracy(y_gold, y_pred))
+    print('precision: ', precision(y_gold, y_pred, 'NOUN'))
+    print('recall: ', recall(y_gold, y_pred, 'NOUN'))
+    print('fscore: ', f1(y_gold, y_pred, 'NOUN'))
 
-    print(conf_matrix(y_gold, y_pred, list(d.pos_tags)))
+    conf_matrix(y_gold, y_pred, list(d.pos_tags))
 
