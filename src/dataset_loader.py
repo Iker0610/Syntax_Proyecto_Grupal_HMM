@@ -1,14 +1,23 @@
-from dataclasses import dataclass, field
+from itertools import pairwise
 from pathlib import Path
 
+from dataclasses import dataclass, field
+
+
+@dataclass
+class DatasetSplitStatistics:
+    individual_tag_frequencies: dict = field(default_factory=dict)
+    tag_bigrams_frequencies: dict = field(default_factory=dict)
+    sentences_length: list[tuple[str, str]] = field(default_factory=list)
+    sentences_average_length: str = field(default_factory=str)
+    token_distribution_per_pos_tag: dict[str, dict[str, int]] = field(default_factory=dict)
 
 @dataclass
 class DatasetSplit:
     name: str
     path: Path | None
     data: list[list[tuple[str, str]]] = field(default_factory=list)
-    statistics: dict = field(default_factory=dict)
-
+    statistics: DatasetSplitStatistics = field(default_factory=DatasetSplitStatistics)
 
 class Dataset:
     pos_tags: set[str]
@@ -38,6 +47,7 @@ class Dataset:
         for split_name, split in splits.items():
             if split.path is not None:
                 self.__load_dataset__(split, split_name == 'train')
+                self.__get_dataset_statistics__(split)
 
         # Add splits as attributes
         for split_name, split in splits.items():
@@ -63,6 +73,34 @@ class Dataset:
                     self.pos_tags.add(pos_tag)
                     self.vocabulary.add(word)
 
+    def __get_dataset_statistics__(self, split: DatasetSplit):
+        split.statistics.individual_tag_frequencies = dict.fromkeys(self.pos_tags, 0)
+        split.statistics.token_distribution_per_pos_tag = {dataset_pos_tag: {} for dataset_pos_tag in self.pos_tags}
+        tag_bigrams_frequencies = split.statistics.tag_bigrams_frequencies
+
+        for sentence in split.data:
+
+            for token, tag in sentence:
+                # Calculate the frequency of each tag within each data split
+                split.statistics.individual_tag_frequencies[tag] += 1
+
+                # Calculate the distribution of tokens per tag within each data split
+                if token not in split.statistics.token_distribution_per_pos_tag[tag]:
+                    split.statistics.token_distribution_per_pos_tag[tag][token] = 0
+                split.statistics.token_distribution_per_pos_tag[tag][token] += 1
+
+
+            # Calculate the frequency of each tag pair within each data split
+            for (token_1, tag_1), (token_2, tag_2) in pairwise(sentence):
+                tag_bigram = (tag_1, tag_2)
+                if tag_bigram not in tag_bigrams_frequencies:
+                    tag_bigrams_frequencies[tag_bigram] = 0
+                tag_bigrams_frequencies[tag_bigram] += 1
+
+        # Calculate length of each sentence and the average length of the data split
+        sentences_length = [len(sentence) for sentence in split.data]
+        split.statistics.sentences_length = sentences_length
+        split.statistics.sentences_average_length = sum(sentences_length) / len(sentences_length)
 
 if __name__ == '__main__':
     d = Dataset(
@@ -74,3 +112,15 @@ if __name__ == '__main__':
 
     for ind, s in enumerate(d.train.data, start=1):
         print(f"{ind} --> {s}")
+
+    print(f"pos_tags ({len(d.pos_tags)}) = {d.pos_tags}")
+
+    print(f"Individual tag frequencies (train) --> {d.train.statistics.individual_tag_frequencies}")
+    print(f"Tag bigrams frequencies (train) --> {d.train.statistics.tag_bigrams_frequencies}")
+    print(f"Sentences length (train) --> {d.train.statistics.sentences_length}")
+    print(f"Sentences average length (train) --> {d.train.statistics.sentences_average_length} tokens")
+
+    print("Token distribution per PoS tag (train)")
+    for pos_tag, token_distribution in d.train.statistics.token_distribution_per_pos_tag.items():
+        if len(token_distribution) < 100: # Just to try values are generated correctly (PROVISIONAL)
+            print(f"{pos_tag} --> {token_distribution}")
