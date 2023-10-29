@@ -24,5 +24,5 @@ def f1(y_true, y_pred, tag):
     return 2 * p * r / (p + r)
 
 def conf_matrix(y_true, y_pred, labels):
-    matrix =  confusion_matrix(y_true, y_pred, labels=labels)
+    return confusion_matrix(y_true, y_pred, labels=labels)
 
