@@ -11,6 +11,8 @@ class DatasetSplitStatistics:
     sentences_length: list[tuple[str, str]] = field(default_factory=list)
     sentences_average_length: str = field(default_factory=str)
     token_distribution_per_pos_tag: dict[str, dict[str, int]] = field(default_factory=dict)
+    pos_tag_distribution_per_token: dict[str, dict [str, int]] = field(default_factory=dict)
+
 
 @dataclass
 class DatasetSplit:
@@ -89,6 +91,12 @@ class Dataset:
                     split.statistics.token_distribution_per_pos_tag[tag][token] = 0
                 split.statistics.token_distribution_per_pos_tag[tag][token] += 1
 
+                # Calculate the distribution PoS tags per token within each data split
+                if token not in split.statistics.pos_tag_distribution_per_token:
+                    split.statistics.pos_tag_distribution_per_token[token] = {}
+                if tag not in split.statistics.pos_tag_distribution_per_token[token]:
+                    split.statistics.pos_tag_distribution_per_token[token][tag] = 0
+                split.statistics.pos_tag_distribution_per_token[token][tag] += 1
 
             # Calculate the frequency of each tag pair within each data split
             for (token_1, tag_1), (token_2, tag_2) in pairwise(sentence):
@@ -124,3 +132,8 @@ if __name__ == '__main__':
     for pos_tag, token_distribution in d.train.statistics.token_distribution_per_pos_tag.items():
         if len(token_distribution) < 100: # Just to try values are generated correctly (PROVISIONAL)
             print(f"{pos_tag} --> {token_distribution}")
+
+    print("PoS tag distribution per token (train)")
+    for token, pos_tag_distribution in d.train.statistics.pos_tag_distribution_per_token.items():
+        if len(pos_tag_distribution) > 1:  # Just to try values are generated correctly (PROVISIONAL)
+            print(f"{token} --> {pos_tag_distribution}")
