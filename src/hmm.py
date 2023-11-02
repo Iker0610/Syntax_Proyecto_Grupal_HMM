@@ -1,4 +1,3 @@
-from copy import copy
 from itertools import pairwise
 from pathlib import Path
 
@@ -10,8 +9,20 @@ from dataset_loader import Dataset, DatasetSplit
 # from evaluation_metrics import accuracy, conf_matrix, f1, precision, recall
 
 # Ignore division by zero warnings
-np.seterr(divide='ignore')
+np.seterr(divide='ignore', invalid='ignore')
 EOS = -1
+
+
+class DefaultDict(dict):
+    def __init__(self, default_value, seq=None, **kwargs):
+        super().__init__(seq, **kwargs)
+        self.default_value = default_value
+
+    def __getitem__(self, key):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            return self.default_value
 
 
 class HiddenMarkovModel:
@@ -26,15 +37,28 @@ class HiddenMarkovModel:
     def __init__(
             self,
             dataset: Dataset,
+            unknown_token_threshold: int | float = 0.000015,  # 0.00001 doesn't filter in basque dataset
     ):
+        # Calculate which tokens are converted to <UNK> tokens
+        assert isinstance(unknown_token_threshold, int) or unknown_token_threshold < 1
+        _frequencies = dataset.train.statistics.token_frequencies
+        if isinstance(unknown_token_threshold, float):
+            _total_tokens = sum(_frequencies.values())
+            final_vocab = [token for token, frequency in _frequencies.items() if frequency / _total_tokens >= unknown_token_threshold]
+        else:
+            final_vocab = [token for token, frequency in _frequencies.items() if frequency >= unknown_token_threshold]
+        final_vocab.append('<UNK>')
+
         # Initialize the model parameters
         self.states = list(dataset.pos_tags) + ['<EOS>']
+        self.vocab = final_vocab
         self.Q = {tag: index for index, tag in enumerate(self.states)}
-        self.O = {token: index for index, token in enumerate(dataset.vocabulary)}
+        self.O = {token: index for index, token in enumerate(final_vocab)}
+        self.O = DefaultDict(seq=self.O, default_value=self.O['<UNK>'])
 
-        self.transition_probabilities = np.zeros((len(self.Q), len(self.Q)))
-        self.emission_likelihoods = np.zeros((len(self.Q), len(self.O)))
-        self.initial_probability_distribution = np.zeros(len(self.Q))
+        self.transition_probabilities = np.zeros((len(self.states), len(self.states)))
+        self.emission_likelihoods = np.zeros((len(self.states), len(self.vocab)))
+        self.initial_probability_distribution = np.zeros(len(self.states))
 
         # Fit the model to the dataset
         self.fit(dataset.train)

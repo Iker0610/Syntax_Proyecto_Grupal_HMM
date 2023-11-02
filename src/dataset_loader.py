@@ -80,7 +80,7 @@ class Dataset:
 
     def __get_dataset_statistics__(self, split: DatasetSplit):
         split.statistics.individual_tag_frequencies = dict.fromkeys(self.pos_tags, 0)
-        split.statistics.token_frequencies = dict.fromkeys(self.vocabulary, 0)
+        split.statistics.token_frequencies = defaultdict(int)
         split.statistics.token_distribution_per_pos_tag = {dataset_pos_tag: {} for dataset_pos_tag in self.pos_tags}
         tag_bigrams_frequencies = split.statistics.tag_bigrams_frequencies
 
