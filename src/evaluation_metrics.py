@@ -72,9 +72,6 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
     recalls = {tag: recall(gold, prediction, tag) for tag in tags}
     f1s = {tag: f1(gold, prediction, tag) for tag in tags}
 
-    # Create the confusion matrix
-    conf_matrix(gold, prediction, tags)
-
     return {
         "accuracy": acc,
         "perplexity": perp,
