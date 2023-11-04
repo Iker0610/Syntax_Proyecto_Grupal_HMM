@@ -74,7 +74,7 @@ class Dataset:
                 new_sentence = []
 
             else:
-                _line = line.split('\t')
+                _line = line.split('\t', maxsplit=4)
                 word, pos_tag = _line[token_column], _line[3]
                 new_sentence.append((word, pos_tag))
                 if is_train:
