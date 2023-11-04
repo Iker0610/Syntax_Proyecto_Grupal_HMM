@@ -54,7 +54,7 @@ def conf_matrix(y_true, y_pred, labels):
 
 
 def perplexity(sentence_log_probabilities: list[float]):
-    return np.exp(-np.sum(sentence_log_probabilities) / len(sentence_log_probabilities))
+    return np.exp2(-np.sum(sentence_log_probabilities) / len(sentence_log_probabilities))
 
 
 def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tuple[str, str]]], sentence_log_probabilities: list[float]) -> dict[str, Any]:
@@ -71,6 +71,22 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
     precisions = {tag: precision(gold, prediction, tag) for tag in tags}
     recalls = {tag: recall(gold, prediction, tag) for tag in tags}
     f1s = {tag: f1(gold, prediction, tag) for tag in tags}
+
+    #--------------------------------------
+    # Per sentence evaluation
+    per_sentence_metrics = []
+    for gold_sentence, pred_sentence, sentence_log_prob in zip(gold, prediction, sentence_log_probabilities):
+        per_sentence_metrics.append({
+            "length": len(gold_sentence),
+            "accuracy": accuracy(gold_sentence, pred_sentence),
+            "probability": np.exp2(sentence_log_prob),
+            "per_tag": {tag: {"precision": precision(gold_sentence, pred_sentence, tag), "recall": recall(gold_sentence, pred_sentence, tag), "f1": f1(gold_sentence, pred_sentence, tag)} for tag in tags},
+            "macro": {"precision": np.mean(list(precisions.values())), "recall": np.mean(list(recalls.values())), "f1": np.mean(list(f1s.values()))},
+            "micro": {"precision": precision(gold_sentence, pred_sentence, None), "recall": recall(gold_sentence, pred_sentence, None), "f1": f1(gold_sentence, pred_sentence, None)}
+        })
+
+
+    #--------------------------------------
 
     return {
         "accuracy": acc,
