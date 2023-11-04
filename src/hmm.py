@@ -13,14 +13,6 @@ np.seterr(divide='ignore', invalid='ignore')
 EOS = -1
 
 
-def invert_list_of_tuples(list_of_tuples: list[tuple]) -> tuple[list, list]:
-    """
-    Invert a list of tuples into a tuple of lists
-    :param list_of_tuples: The list of tuples to invert
-    :return: A tuple of lists
-    """
-
-
 class DefaultDict(dict):
     def __init__(self, default_value, seq=None, **kwargs):
         super().__init__(seq, **kwargs)
@@ -168,6 +160,29 @@ class HiddenMarkovModel:
 
         predictions = [self.predict(sentence) for sentence in sentences]
         return tuple(zip(*predictions))
+
+
+def optimize_unk_threshold(dataset: Dataset, metric_funct: callable, min_threshold: float = 0.00001, max_threshold: float = 0.001, num: int = 250) -> dict:
+    search_space = np.geomspace(min_threshold, max_threshold, num)  # The geometric sequence is used to increase the number of points near the minimum threshold
+    results = np.zeros(len(search_space), dtype=np.float32)
+
+    for i, threshold in enumerate(search_space):
+        hmm = HiddenMarkovModel(dataset, threshold)
+        predictions = hmm.batch_predict(dataset.dev)
+        y_gold = [tag for sentence in dataset.dev.data for _, tag in sentence]
+        y_pred = [tag for sentence in predictions for _, tag in sentence]
+        metric_funct(y_gold, y_pred)
+        results[i] = metric_funct(y_gold, y_pred)
+
+    # Obtain the best threshold
+    best_threshold = np.argmax(results)
+
+    return {
+        'best_threshold': search_space[best_threshold],
+        'best_metric': results[best_threshold],
+        'search_space': search_space,
+        'results': results,
+    }
 
 
 if __name__ == '__main__':
