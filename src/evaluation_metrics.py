@@ -1,6 +1,8 @@
+from typing import Any
+
 import numpy as np
 import plotly.figure_factory as ff
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix
 
 
 def accuracy(y_true, y_pred):
@@ -72,7 +74,7 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
     recalls = {tag: recall(gold, prediction, tag) for tag in tags}
     f1s = {tag: f1(gold, prediction, tag) for tag in tags}
 
-    #--------------------------------------
+    # --------------------------------------
     # Per sentence evaluation
     per_sentence_metrics = []
     for gold_sentence, pred_sentence, sentence_log_prob in zip(gold, prediction, sentence_log_probabilities):
@@ -85,8 +87,7 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
             "micro": {"precision": precision(gold_sentence, pred_sentence, None), "recall": recall(gold_sentence, pred_sentence, None), "f1": f1(gold_sentence, pred_sentence, None)}
         })
 
-
-    #--------------------------------------
+    # --------------------------------------
 
     return {
         "accuracy": acc,
