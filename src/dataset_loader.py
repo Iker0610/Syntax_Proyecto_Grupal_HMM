@@ -1,7 +1,7 @@
 from collections import Counter, defaultdict
 from itertools import pairwise
 from pathlib import Path
-
+import pandas as pd
 from dataclasses import dataclass, field
 
 
@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 class DatasetSplitStatistics:
     token_frequencies: dict[str, int] = field(default_factory=dict)
     individual_tag_frequencies: dict = field(default_factory=dict)
-    tag_bigrams_frequencies: dict = field(default_factory=dict)
+    tag_bigrams_frequencies: pd.DataFrame = field(default_factory=pd.DataFrame)
     sentences_length: list[tuple[str, str]] = field(default_factory=list)
     sentences_average_length: str = field(default_factory=str)
     token_distribution_per_pos_tag: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -85,7 +85,13 @@ class Dataset:
         split.statistics.individual_tag_frequencies = dict.fromkeys(self.pos_tags, 0)
         split.statistics.token_frequencies = defaultdict(int)
         split.statistics.token_distribution_per_pos_tag = {dataset_pos_tag: {} for dataset_pos_tag in self.pos_tags}
-        tag_bigrams_frequencies = split.statistics.tag_bigrams_frequencies
+
+        split.statistics.tag_bigrams_frequencies = pd.DataFrame(
+            data=0,
+            index=list(self.pos_tags),
+            columns=list(self.pos_tags)
+        )
+
 
         for sentence in split.data:
 
@@ -107,11 +113,8 @@ class Dataset:
                 split.statistics.pos_tag_distribution_per_token[token][tag] += 1
 
             # Calculate the frequency of each tag pair within each data split
-            for (token_1, tag_1), (token_2, tag_2) in pairwise(sentence):
-                tag_bigram = (tag_1, tag_2)
-                if tag_bigram not in tag_bigrams_frequencies:
-                    tag_bigrams_frequencies[tag_bigram] = 0
-                tag_bigrams_frequencies[tag_bigram] += 1
+            for (_, tag_1), (_, tag_2) in pairwise(sentence):
+                split.statistics.tag_bigrams_frequencies[tag_2][tag_1] += 1
 
         # Calculate length of each sentence and the average length of the data split
         sentences_length = [len(sentence) for sentence in split.data]
@@ -133,7 +136,6 @@ if __name__ == '__main__':
     print(f"pos_tags ({len(d.pos_tags)}) = {d.pos_tags}")
 
     print(f"Individual tag frequencies (train) --> {d.train.statistics.individual_tag_frequencies}")
-    print(f"Tag bigrams frequencies (train) --> {d.train.statistics.tag_bigrams_frequencies}")
     print(f"Sentences length (train) --> {d.train.statistics.sentences_length}")
     print(f"Sentences average length (train) --> {d.train.statistics.sentences_average_length} tokens")
 
