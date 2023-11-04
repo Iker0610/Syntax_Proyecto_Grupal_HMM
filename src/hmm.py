@@ -155,7 +155,7 @@ class HiddenMarkovModel:
         # Reverse the best path and return the predicted tags
         return [(token, self.states[tag]) for token, tag in zip(sentence, reversed(best_path))], best_path_probability
 
-    def batch_predict(self, sentences: list[list[str]] | list[list[tuple[str | str]]] | DatasetSplit) -> tuple[tuple[list[tuple[str, str]], tuple[float]]]:
+    def batch_predict(self, sentences: list[list[str]] | list[list[tuple[str | str]]] | DatasetSplit) -> tuple[tuple[list[tuple[str, str]]], tuple[float]]:
         """
         Predict the POS tags for a given list of sentences using the Viterbi algorithm
         :param sentences: The sentences to predict the POS tags for as a list of lists of tokens
