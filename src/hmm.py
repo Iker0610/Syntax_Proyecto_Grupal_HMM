@@ -12,6 +12,13 @@ from dataset_loader import Dataset, DatasetSplit
 np.seterr(divide='ignore', invalid='ignore')
 EOS = -1
 
+def invert_list_of_tuples(list_of_tuples: list[tuple]) -> tuple[list, list]:
+    """
+    Invert a list of tuples into a tuple of lists
+    :param list_of_tuples: The list of tuples to invert
+    :return: A tuple of lists
+    """
+
 
 class DefaultDict(dict):
     def __init__(self, default_value, seq=None, **kwargs):
@@ -146,6 +153,18 @@ class HiddenMarkovModel:
         # best_path = best_path[1:]
         # Reverse the best path and return the predicted tags
         return [(token, self.states[tag]) for token, tag in zip(sentence, reversed(best_path))], best_path_probability
+
+    def batch_predict(self, sentences: list[list[str]] | DatasetSplit) -> tuple[tuple[list[tuple[str, str]], tuple[float]]]:
+        """
+        Predict the POS tags for a given list of sentences using the Viterbi algorithm
+        :param sentences: The sentences to predict the POS tags for as a list of lists of tokens
+        :return: list of lists of tuples with the tokens and their predicted POS tags and the probability of the best path
+        """
+        if isinstance(sentences, DatasetSplit):
+            sentences = [[token for token, _ in sentence] for sentence in sentences.data]
+
+        predictions = [self.predict(sentence) for sentence in sentences]
+        return tuple(zip(*predictions))
 
 
 if __name__ == '__main__':
