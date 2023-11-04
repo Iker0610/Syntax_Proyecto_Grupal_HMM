@@ -94,5 +94,6 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
         "perplexity": perp,
         "per_tag": {tag: {"precision": precisions[tag], "recall": recalls[tag], "f1": f1s[tag]} for tag in tags},
         "macro": {"precision": np.mean(list(precisions.values())), "recall": np.mean(list(recalls.values())), "f1": np.mean(list(f1s.values()))},
-        "micro": {"precision": precision(gold, prediction, None), "recall": recall(gold, prediction, None), "f1": f1(gold, prediction, None)}
+        "micro": {"precision": precision(gold, prediction, None), "recall": recall(gold, prediction, None), "f1": f1(gold, prediction, None)},
+        "per_sentence": per_sentence_metrics,
     }
