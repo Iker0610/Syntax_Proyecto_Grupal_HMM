@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from numpy import ndarray
+from tqdm import tqdm
 
 from dataset_loader import Dataset, DatasetSplit
 
@@ -166,11 +167,11 @@ def optimize_unk_threshold(dataset: Dataset, metric_funct: callable, min_thresho
     search_space = np.geomspace(min_threshold, max_threshold, num)  # The geometric sequence is used to increase the number of points near the minimum threshold
     results = np.zeros(len(search_space), dtype=np.float32)
 
-    for i, threshold in enumerate(search_space):
+    for i, threshold in tqdm(enumerate(search_space), total=len(search_space)):
         hmm = HiddenMarkovModel(dataset, threshold)
         predictions = hmm.batch_predict(dataset.dev)
         y_gold = [tag for sentence in dataset.dev.data for _, tag in sentence]
-        y_pred = [tag for sentence in predictions for _, tag in sentence]
+        y_pred = [tag for sentence in predictions[0] for _, tag in sentence]
         metric_funct(y_gold, y_pred)
         results[i] = metric_funct(y_gold, y_pred)
 
