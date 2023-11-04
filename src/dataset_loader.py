@@ -38,6 +38,7 @@ class Dataset:
             dataset_name: str = 'POS Tagging Dataset',
             dev_path: Path | None = None,
             test_path: Path | None = None,
+            lemmatized: bool = False,
     ):
         self.dataset_name = dataset_name
         self.pos_tags = set()
@@ -51,14 +52,15 @@ class Dataset:
         # Load splits
         for split_name, split in splits.items():
             if split.path is not None:
-                self.__load_dataset__(split, split_name == 'train')
+                self.__load_dataset__(split, split_name == 'train', lemmatized)
                 self.__get_dataset_statistics__(split)
 
         # Add splits as attributes
         for split_name, split in splits.items():
             setattr(self, split_name, split)
 
-    def __load_dataset__(self, split: DatasetSplit, is_train: bool = False):
+    def __load_dataset__(self, split: DatasetSplit, is_train: bool = False, lemmatized: bool = False):
+        token_column = 2 if lemmatized else 1
         with open(split.path, encoding='utf8') as f:
             lines = f.readlines()
 
@@ -72,7 +74,8 @@ class Dataset:
                 new_sentence = []
 
             else:
-                word, _, pos_tag = line.split('\t')[1:4]
+                _line = line.split('\t')
+                word, pos_tag = _line[token_column], _line[3]
                 new_sentence.append((word, pos_tag))
                 if is_train:
                     self.pos_tags.add(pos_tag)
