@@ -12,6 +12,7 @@ from dataset_loader import Dataset, DatasetSplit
 np.seterr(divide='ignore', invalid='ignore')
 EOS = -1
 
+
 def invert_list_of_tuples(list_of_tuples: list[tuple]) -> tuple[list, list]:
     """
     Invert a list of tuples into a tuple of lists
@@ -154,7 +155,7 @@ class HiddenMarkovModel:
         # Reverse the best path and return the predicted tags
         return [(token, self.states[tag]) for token, tag in zip(sentence, reversed(best_path))], best_path_probability
 
-    def batch_predict(self, sentences: list[list[str]] | DatasetSplit) -> tuple[tuple[list[tuple[str, str]], tuple[float]]]:
+    def batch_predict(self, sentences: list[list[str]] | list[list[tuple[str | str]]] | DatasetSplit) -> tuple[tuple[list[tuple[str, str]], tuple[float]]]:
         """
         Predict the POS tags for a given list of sentences using the Viterbi algorithm
         :param sentences: The sentences to predict the POS tags for as a list of lists of tokens
@@ -162,6 +163,8 @@ class HiddenMarkovModel:
         """
         if isinstance(sentences, DatasetSplit):
             sentences = [[token for token, _ in sentence] for sentence in sentences.data]
+        elif isinstance(sentences[0][0], tuple):
+            sentences = [[token for token, _ in sentence] for sentence in sentences]
 
         predictions = [self.predict(sentence) for sentence in sentences]
         return tuple(zip(*predictions))
@@ -175,7 +178,9 @@ if __name__ == '__main__':
         test_path=Path('../data/UD_Basque-BDT/eu_bdt-ud-test.conllu'),
     )
     hmm = HiddenMarkovModel(d)
+    hmm.batch_predict(d.test)
     gold = d.train.data[0]
+
     pred = hmm.predict([token for token, _ in d.train.data[0]])
 
     y_gold = [tag for word, tag in gold]
