@@ -93,6 +93,7 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
     # Per sentence evaluation
     per_sentence_metrics = []
     for gold_sentence, pred_sentence, sentence_log_prob in zip(gold, prediction, sentence_log_probabilities):
+        sentence = " ".join([tag[0] for tag in gold_sentence])
         gold_sentence = [tag[1] for tag in gold_sentence]
         pred_sentence = [tag[1] for tag in pred_sentence]
 
@@ -104,6 +105,7 @@ def evaluate_dataset(gold: list[list[tuple[str, str]]], prediction: list[list[tu
         sentence_f1s = {tag: f1(gold_sentence, pred_sentence, tag) for tag in tags}
 
         per_sentence_metrics.append({
+            "sentence": sentence,
             "length": len(gold_sentence),
             "accuracy": accuracy(gold_sentence, pred_sentence),
             "probability": np.exp2(sentence_log_prob),
