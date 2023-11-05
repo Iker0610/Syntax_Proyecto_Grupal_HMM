@@ -58,7 +58,6 @@ class DatasetSplit:
 
         # Calculate length of each sentence and the average length of the data split
         sentences_length = [len(sentence) for sentence in self.data]
-        sentences_length = sentences_length
 
         return DatasetSplitStatistics(
             token_frequencies=token_frequencies,
