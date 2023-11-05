@@ -135,7 +135,7 @@ class HiddenMarkovModel:
 
         # -----------------------------------------------------------------------------------------------------------------------
 
-        # Termination step: calculate best path probability and best path pointer
+        # Termination step: calculate the best path probability and best path pointer
         best_path_probability = np.max(viterbi_matrix[:, -1])
         best_path_pointer = np.argmax(viterbi_matrix[:, -1])
 
