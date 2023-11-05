@@ -10,7 +10,7 @@ class DatasetSplitStatistics:
     token_frequencies: dict[str, int] = field(default_factory=dict)
     individual_tag_frequencies: dict = field(default_factory=dict)
     tag_bigrams_frequencies: pd.DataFrame = field(default_factory=pd.DataFrame)
-    sentences_length: list[tuple[str, str]] = field(default_factory=list)
+    sentences_length: list[int] = field(default_factory=list)
     sentences_average_length: str = field(default_factory=str)
     token_distribution_per_pos_tag: dict[str, dict[str, int]] = field(default_factory=dict)
     pos_tag_distribution_per_token: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -91,7 +91,6 @@ class Dataset:
             index=list(self.pos_tags),
             columns=list(self.pos_tags)
         )
-
 
         for sentence in split.data:
 
