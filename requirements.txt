@@ -1,0 +1,7 @@
+plotly
+matplotlib
+pandas
+numpy
+wordcloud
+scikit-learn
+tqdm
